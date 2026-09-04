@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GusPay — Autonomous QRIS Payment Gateway</title>
+  <!-- Google Fonts: Newsreader (Editorial Serif) & Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- PrismJS syntax highlighting -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Newsreader', 'Cormorant Garamond', 'Georgia', 'serif'],
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            canvas: '#faf9f5',
+            surface: {
+              soft: '#f5f0e8',
+              card: '#efe9de',
+              strong: '#e8e0d2',
+              dark: '#181715',
+              'dark-elevated': '#252320',
+              'dark-soft': '#1f1e1b',
+            },
+            coral: {
+              DEFAULT: '#cc785c',
+              active: '#a9583e',
+              disabled: '#e6dfd8',
+            },
+            ink: '#141413',
+            body: {
+              DEFAULT: '#3d3d3a',
+              strong: '#252523',
+            },
+            muted: {
+              DEFAULT: '#6c6a64',
+              soft: '#8e8b82',
+            },
+            hairline: {
+              DEFAULT: '#e6dfd8',
+              soft: '#ebe6df',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #faf9f5;
+      color: #3d3d3a;
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Newsreader', serif;
+      letter-spacing: -0.02em;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-[#cc785c] selection:text-white">
+
+  <!-- TOP BAR NAVIGATION (Claude Warm Minimalist) -->
+  <header class="border-b border-hairline bg-canvas/90 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-3">
+        <a href="/dashboard" class="flex items-center gap-2 group">
+          <!-- Anthropic star glyph -->
+          <svg class="w-5 h-5 text-ink group-hover:text-coral transition" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L13.8 8.2L20 10L13.8 11.8L12 18L10.2 11.8L4 10L10.2 8.2L12 2Z" />
+          </svg>
+          <span class="font-display text-xl font-medium text-ink">GusPay</span>
+          <span class="text-[10px] px-2 py-0.5 ml-1 rounded-full bg-surface-card text-muted border border-hairline font-mono font-medium">Gateway</span>
+        </a>
+      </div>
+
+      <!-- Desktop Navigation Tabs -->
+      <nav class="hidden md:flex items-center space-x-1">
+        <a href="/dashboard" id="nav-dashboard" class="nav-link px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-ink hover:bg-surface-card transition flex items-center gap-1.5">
+          <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="/invoices" id="nav-invoices" class="nav-link px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-ink hover:bg-surface-card transition flex items-center gap-1.5">
+          <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+          <span>Invoices</span>
+        </a>
+        <a href="/mutations" id="nav-mutations" class="nav-link px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-ink hover:bg-surface-card transition flex items-center gap-1.5">
+          <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+          <span>Mutasi DANA</span>
+        </a>
+        <a href="/docs" id="nav-docs" class="nav-link px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-ink hover:bg-surface-card transition flex items-center gap-1.5">
+          <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+          <span>API Docs</span>
+        </a>
+        <a href="/settings" id="nav-settings" class="nav-link px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-ink hover:bg-surface-card transition flex items-center gap-1.5">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+          <span>Settings & Keys</span>
+        </a>
+        <a href="/forwarder" id="nav-forwarder" class="nav-link px-3 py-1.5 rounded-lg text-xs font-medium text-coral bg-coral/10 hover:bg-coral/20 transition flex items-center gap-1.5 border border-coral/20">
+          <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+          <span>APK Forwarder</span>
+        </a>
+      </nav>
+
+      <!-- Right Header Actions -->
+      <div class="flex items-center space-x-2">
+        <button onclick="handleLogout()" class="px-2.5 py-1.5 text-xs text-muted hover:text-coral hover:bg-surface-card rounded-lg transition flex items-center gap-1.5">
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Logout</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Mobile Navigation Bar -->
+    <div class="md:hidden flex items-center justify-around border-t border-hairline px-2 py-2 bg-canvas text-[11px] overflow-x-auto">
+      <a href="/dashboard" id="mob-dashboard" class="px-2 py-1 text-muted">Dashboard</a>
+      <a href="/invoices" id="mob-invoices" class="px-2 py-1 text-muted">Invoices</a>
+      <a href="/mutations" id="mob-mutations" class="px-2 py-1 text-muted">Mutasi</a>
+      <a href="/docs" id="mob-docs" class="px-2 py-1 text-muted">API Docs</a>
+      <a href="/settings" id="mob-settings" class="px-2 py-1 text-muted">Settings</a>
+      <a href="/forwarder" id="mob-forwarder" class="px-2 py-1 text-coral font-medium">APK</a>
+    </div>
+  </header>
+
+  <!-- MAIN VIEW WRAPPER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- PAGE 1: DASHBOARD -->
+    <div id="page-dashboard" class="page-view hidden space-y-8">
+      
+      <!-- Top Hero Header -->
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-hairline pb-6">
+        <div>
+          <div class="text-xs font-mono uppercase tracking-wider text-muted-soft mb-1">Autonomous QRIS Engine</div>
+          <h1 class="font-display text-3xl sm:text-4xl font-normal text-ink">Ringkasan Gateway</h1>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openModal('create-invoice-modal')" class="px-3.5 py-2 bg-coral hover:bg-coral-active text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Buat Invoice Baru</span>
+          </button>
+          <button onclick="openModal('simulate-modal')" class="px-3.5 py-2 bg-surface-card hover:bg-surface-strong text-ink border border-hairline text-xs font-medium rounded-lg transition flex items-center gap-1.5">
+            <i data-lucide="play" class="w-3.5 h-3.5 text-coral"></i>
+            <span>Simulasi Notif</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Cards (Warm Cream Cards) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-5 rounded-xl bg-surface-card border border-hairline space-y-2">
+          <div class="text-xs font-medium text-muted uppercase tracking-wider">Total Volume (PAID)</div>
+          <div class="font-display text-3xl font-normal text-ink tracking-tight" id="stat-total-paid">Rp 0</div>
+          <div class="text-xs text-[#5db872] font-medium flex items-center gap-1">
+            <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+            <span id="stat-success-count">0 Transaksi Sukses</span>
+          </div>
+        </div>
+
+        <div class="p-5 rounded-xl bg-surface-card border border-hairline space-y-2">
+          <div class="text-xs font-medium text-muted uppercase tracking-wider">Invoice Pending</div>
+          <div class="font-display text-3xl font-normal text-[#d4a017] tracking-tight" id="stat-total-pending">0</div>
+          <div class="text-xs text-muted flex items-center gap-1">
+            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+            <span>Menunggu Pembayaran</span>
+          </div>
+        </div>
+
+        <div class="p-5 rounded-xl bg-surface-card border border-hairline space-y-2">
+          <div class="text-xs font-medium text-muted uppercase tracking-wider">Total Invoice</div>
+          <div class="font-display text-3xl font-normal text-ink tracking-tight" id="stat-total-invoices">0</div>
+          <div class="text-xs text-muted flex items-center gap-1">
+            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+            <span>Semua Transaksi</span>
+          </div>
+        </div>
+
+        <div class="p-5 rounded-xl bg-surface-card border border-hairline space-y-2">
+          <div class="text-xs font-medium text-muted uppercase tracking-wider">Mutasi Masuk</div>
+          <div class="font-display text-3xl font-normal text-coral tracking-tight" id="stat-total-mutations">0</div>
+          <div class="text-xs text-coral font-medium flex items-center gap-1">
+            <i data-lucide="radio" class="w-3.5 h-3.5"></i>
+            <span>DANA Listener</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tables Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Recent Invoices -->
+        <div class="bg-surface-card border border-hairline rounded-xl p-6 flex flex-col space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="font-display text-lg font-normal text-ink flex items-center gap-2">
+              <i data-lucide="receipt" class="w-4 h-4 text-coral"></i>
+              Invoice Terbaru
+            </h2>
+            <a href="/invoices" class="text-xs text-coral hover:underline font-medium">Lihat Semua &rarr;</a>
+          </div>
+          <div class="overflow-x-auto flex-1">
+            <table class="w-full text-left text-xs">
+              <thead class="text-muted border-b border-hairline">
+                <tr>
+                  <th class="pb-2">Invoice</th>
+                  <th class="pb-2">Nominal</th>
+                  <th class="pb-2">Status</th>
+                  <th class="pb-2 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-invoices-body" class="divide-y divide-hairline/70 text-body">
+                <tr><td colspan="4" class="py-6 text-center text-muted-soft">Belum ada invoice</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Mutations -->
+        <div class="bg-surface-card border border-hairline rounded-xl p-6 flex flex-col space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="font-display text-lg font-normal text-ink flex items-center gap-2">
+              <i data-lucide="activity" class="w-4 h-4 text-coral"></i>
+              Mutasi DANA Terbaru
+            </h2>
+            <a href="/mutations" class="text-xs text-coral hover:underline font-medium">Lihat Semua &rarr;</a>
+          </div>
+          <div class="overflow-x-auto flex-1">
+            <table class="w-full text-left text-xs">
+              <thead class="text-muted border-b border-hairline">
+                <tr>
+                  <th class="pb-2">Waktu</th>
+                  <th class="pb-2">Nominal Masuk</th>
+                  <th class="pb-2">Keterangan</th>
+                  <th class="pb-2 text-right">Matched</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-mutations-body" class="divide-y divide-hairline/70 text-body">
+                <tr><td colspan="4" class="py-6 text-center text-muted-soft">Belum ada mutasi masuk</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- PAGE 2: INVOICES -->
+    <div id="page-invoices" class="page-view hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-hairline pb-4">
+        <div>
+          <div class="text-xs font-mono uppercase tracking-wider text-muted-soft mb-1">Transaction Ledger</div>
+          <h1 class="font-display text-3xl font-normal text-ink">Daftar Tagihan & Invoice</h1>
+        </div>
+        <button onclick="openModal('create-invoice-modal')" class="px-3.5 py-2 bg-coral hover:bg-coral-active text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          <span>Buat Invoice Baru</span>
+        </button>
+      </div>
+
+      <div class="bg-surface-card border border-hairline rounded-xl p-5 overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="text-muted border-b border-hairline">
+            <tr>
+              <th class="pb-3">ID Invoice</th>
+              <th class="pb-3">Order / Customer</th>
+              <th class="pb-3">Nominal Dasar</th>
+              <th class="pb-3">Kode Unik</th>
+              <th class="pb-3">Total Transfer</th>
+              <th class="pb-3">Status</th>
+              <th class="pb-3">Waktu Expiry/Paid</th>
+              <th class="pb-3 text-right">Link Checkout</th>
+            </tr>
+          </thead>
+          <tbody id="invoices-table-body" class="divide-y divide-hairline/70 text-body">
+            <tr><td colspan="8" class="py-8 text-center text-muted-soft">Memuat data invoice...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAGE 3: MUTATIONS -->
+    <div id="page-mutations" class="page-view hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-hairline pb-4">
+        <div>
+          <div class="text-xs font-mono uppercase tracking-wider text-muted-soft mb-1">Realtime Ingestion</div>
+          <h1 class="font-display text-3xl font-normal text-ink">Log Mutasi & Notifikasi DANA</h1>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="flex h-2.5 w-2.5 relative">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-coral opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-coral"></span>
+          </span>
+          <span class="text-xs font-mono text-coral font-medium">Forwarder WebSocket Active</span>
+        </div>
+      </div>
+
+      <div class="bg-surface-card border border-hairline rounded-xl p-5 overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="text-muted border-b border-hairline">
+            <tr>
+              <th class="pb-3">Waktu</th>
+              <th class="pb-3">Package</th>
+              <th class="pb-3">Nominal Terdeteksi</th>
+              <th class="pb-3">Raw Pesan Notifikasi</th>
+              <th class="pb-3 text-right">Matched Invoice</th>
+            </tr>
+          </thead>
+          <tbody id="mutations-table-body" class="divide-y divide-hairline/70 text-body">
+            <tr><td colspan="5" class="py-8 text-center text-muted-soft">Memuat log mutasi...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAGE 4: API DOCS (Dark Code Surfaces) -->
+    <div id="page-docs" class="page-view hidden space-y-6">
+      <div class="border-b border-hairline pb-4">
+        <div class="text-xs font-mono uppercase tracking-wider text-muted-soft mb-1">Developer Reference</div>
+        <h1 class="font-display text-3xl font-normal text-ink">Dokumentasi Integrasi API</h1>
+        <p class="text-sm text-muted mt-1">Gunakan GusPay sebagai payment gateway mandiri untuk website atau bot kamu.</p>
+      </div>
+
+      <!-- Quick Specs -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-surface-card border border-hairline space-y-1">
+          <div class="text-muted text-xs font-medium">BASE URL</div>
+          <div class="text-sm font-mono font-medium text-coral">https://gus-pay.rkhyg.xyz</div>
+        </div>
+        <div class="p-4 rounded-xl bg-surface-card border border-hairline space-y-1">
+          <div class="text-muted text-xs font-medium">AUTH HEADER</div>
+          <div class="text-sm font-mono font-medium text-ink">x-api-key: YOUR_SECRET_KEY</div>
+        </div>
+        <div class="p-4 rounded-xl bg-surface-card border border-hairline space-y-1">
+          <div class="text-muted text-xs font-medium">CONTENT-TYPE</div>
+          <div class="text-sm font-mono font-medium text-ink">application/json</div>
+        </div>
+      </div>
+
+      <!-- Step 1: Create Invoice (Dark Code Card) -->
+      <div class="p-6 rounded-xl bg-surface-dark text-surface-canvas border border-surface-dark-soft space-y-4">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-0.5 rounded bg-coral text-white font-mono text-xs font-medium">POST</span>
+          <code class="text-sm font-mono text-white">/api/v1/invoices</code>
+        </div>
+        <p class="text-xs text-[#a09d96]">Membuat invoice tagihan pembayaran baru. Response akan mengembalikan URL checkout dan nominal persis termasuk kode unik.</p>
+
+        <div class="space-y-2">
+          <div class="text-xs font-mono text-[#a09d96]">Request Payload (JSON):</div>
+          <pre class="bg-surface-dark-soft p-4 rounded-lg text-xs font-mono overflow-x-auto text-[#faf9f5]"><code>{
+  "orderId": "ORD-12345",
+  "amount": 50000,
+  "customerName": "Rey Synthever",
+  "customerEmail": "rey@rkhyg.xyz",
+  "description": "Langganan VIP 1 Bulan",
+  "callbackUrl": "https://website-kamu.com/api/payment-callback"
+}</code></pre>
+        </div>
+
+        <div class="space-y-2">
+          <div class="text-xs font-mono text-[#a09d96]">Contoh Pemanggilan (JavaScript / Fetch):</div>
+          <pre class="bg-surface-dark-soft p-4 rounded-lg text-xs font-mono overflow-x-auto text-[#faf9f5]"><code>const res = await fetch('https://gus-pay.rkhyg.xyz/api/v1/invoices', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': 'YOUR_SECRET_API_KEY'
+  },
+  body: JSON.stringify({
+    orderId: 'ORDER-991',
+    amount: 25000,
+    customerName: 'Budi',
+    description: 'Topup Koin',
+    callbackUrl: 'https://mywebsite.com/webhook/payment'
+  })
+});
+const { data } = await res.json();
+console.log('Redirect User To:', data.checkoutUrl);</code></pre>
+        </div>
+      </div>
+
+      <!-- Step 2: Webhook Callback (Dark Code Card) -->
+      <div class="p-6 rounded-xl bg-surface-dark text-surface-canvas border border-surface-dark-soft space-y-4">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-0.5 rounded bg-[#5db8a6] text-[#181715] font-mono text-xs font-medium">WEBHOOK</span>
+          <span class="text-sm font-display text-white">Payment Success Callback Event</span>
+        </div>
+        <p class="text-xs text-[#a09d96]">Saat pembeli berhasil mentransfer dana ke QRIS DANA Bisnis, GusPay akan mem-POST event callback ke <code class="text-coral">callbackUrl</code> tokomu.</p>
+
+        <pre class="bg-surface-dark-soft p-4 rounded-lg text-xs font-mono overflow-x-auto text-[#faf9f5]"><code>{
+  "event": "payment.success",
+  "data": {
+    "invoiceId": "INV-MTN8A1-XYZ",
+    "orderId": "ORDER-991",
+    "baseAmount": 25000,
+    "uniqueCode": 105,
+    "totalAmount": 25105,
+    "status": "PAID",
+    "paidAt": "2026-09-04T17:15:20.123Z",
+    "customerName": "Budi"
+  },
+  "timestamp": "2026-09-04T17:15:20.125Z"
+}</code></pre>
+      </div>
+
+    </div>
+
+    <!-- PAGE 5: SETTINGS & SECURITY AUTH -->
+    <div id="page-settings" class="page-view hidden space-y-6">
+      <div class="border-b border-hairline pb-4">
+        <div class="text-xs font-mono uppercase tracking-wider text-muted-soft mb-1">Security & Configuration</div>
+        <h1 class="font-display text-3xl font-normal text-ink">Pengaturan & Keamanan</h1>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- QRIS Info & Protected View -->
+        <div class="bg-surface-card border border-hairline rounded-xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-display text-lg font-normal text-ink flex items-center gap-2">
+              <i data-lucide="shield-check" class="w-4 h-4 text-coral"></i>
+              QRIS DANA Bisnis (.env Protected)
+            </h3>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-surface-soft text-muted border border-hairline font-mono">Immutable</span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-muted mb-1">String QRIS Statis (Tersensor)</label>
+            <input type="text" id="masked-qris-display" readonly class="w-full bg-canvas border border-hairline rounded-lg p-2.5 text-xs font-mono text-muted focus:outline-none" value="Memuat...">
+            <p class="text-[11px] text-muted mt-1">String QRIS statis tersimpan aman di file <code class="text-coral">.env</code> server untuk mencegah modifikasi tidak sah.</p>
+          </div>
+
+          <!-- Reveal Full QRIS Button -->
+          <div class="p-4 rounded-xl bg-surface-soft border border-hairline space-y-2.5">
+            <div class="text-xs font-medium text-ink flex items-center gap-1.5">
+              <i data-lucide="eye" class="w-4 h-4 text-coral"></i>
+              Buka Sensor String QRIS
+            </div>
+            <p class="text-[11px] text-muted leading-relaxed">Masukkan password admin untuk melihat seluruh string QRIS tanpa sensor.</p>
+            <div class="flex gap-2">
+              <input type="password" id="reveal-password-input" placeholder="Password admin" class="flex-1 bg-canvas border border-hairline rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-coral">
+              <button onclick="revealQrisString()" class="px-3 py-1.5 bg-coral hover:bg-coral-active text-white text-xs font-medium rounded-lg transition">Buka Sensor</button>
+            </div>
+            <div id="revealed-qris-box" class="hidden p-3 bg-canvas rounded-lg text-xs font-mono text-coral break-all border border-hairline"></div>
+          </div>
+
+          <!-- Gateway Config Form -->
+          <div class="space-y-3 pt-2">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-muted mb-1">Min Kode Unik</label>
+                <input type="number" id="setting-min-code" class="w-full bg-canvas border border-hairline rounded-lg p-2 text-xs text-ink focus:outline-none focus:border-coral" value="1">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-muted mb-1">Max Kode Unik</label>
+                <input type="number" id="setting-max-code" class="w-full bg-canvas border border-hairline rounded-lg p-2 text-xs text-ink focus:outline-none focus:border-coral" value="499">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-muted mb-1">Masa Berlaku Invoice (Menit)</label>
+              <input type="number" id="setting-expiry" class="w-full bg-canvas border border-hairline rounded-lg p-2 text-xs text-ink focus:outline-none focus:border-coral" value="15">
+            </div>
+
+            <button onclick="saveSettings()" class="w-full py-2 bg-coral hover:bg-coral-active text-white text-xs font-medium rounded-lg transition shadow-sm flex items-center justify-center gap-1.5">
+              <i data-lucide="save" class="w-3.5 h-3.5"></i>
+              <span>Simpan Aturan Gateway</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Security & API Keys -->
+        <div class="space-y-6">
+          
+          <!-- Change Password Box -->
+          <div class="bg-surface-card border border-hairline rounded-xl p-6 space-y-4">
+            <h3 class="font-display text-lg font-normal text-ink flex items-center gap-2">
+              <i data-lucide="key-round" class="w-4 h-4 text-coral"></i>
+              Ganti Kata Sandi Dashboard
+            </h3>
+
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-muted mb-1">Password Saat Ini</label>
+                <input type="password" id="cp-old-password" placeholder="••••••••" class="w-full bg-canvas border border-hairline rounded-lg p-2 text-xs text-ink focus:outline-none focus:border-coral">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-muted mb-1">Password Baru (Min. 6 Karakter)</label>
+                <input type="password" id="cp-new-password" placeholder="••••••••" class="w-full bg-canvas border border-hairline rounded-lg p-2 text-xs text-ink focus:outline-none focus:border-coral">
+              </div>
+              <button onclick="handleChangePassword()" class="w-full py-2 bg-surface-soft hover:bg-surface-strong text-ink border border-hairline text-xs font-medium rounded-lg transition flex items-center justify-center gap-1.5">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-coral"></i>
+                <span>Perbarui Password</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- API Keys -->
+          <div class="bg-surface-card border border-hairline rounded-xl p-6 space-y-4">
+            <h3 class="font-display text-lg font-normal text-ink flex items-center gap-2">
+              <i data-lucide="key" class="w-4 h-4 text-coral"></i>
+              API & Forwarder Keys
+            </h3>
+
+            <!-- Secret Key -->
+            <div class="p-3 rounded-lg bg-surface-soft border border-hairline space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-body-strong">Merchant API Key</span>
+                <button onclick="regenerateKey('secret')" class="text-[10px] text-coral hover:underline">Regenerate</button>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="text" id="key-secret" readonly class="w-full bg-canvas border border-hairline rounded-md p-1.5 text-xs font-mono text-coral">
+                <button onclick="copyToClipboard('key-secret')" class="p-1.5 bg-surface-card hover:bg-surface-strong text-muted rounded-md border border-hairline"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
+              </div>
+            </div>
+
+            <!-- Forwarder Key -->
+            <div class="p-3 rounded-lg bg-surface-soft border border-hairline space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-body-strong">Android Forwarder Key</span>
+                <button onclick="regenerateKey('forwarder')" class="text-[10px] text-coral hover:underline">Regenerate</button>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="text" id="key-forwarder" readonly class="w-full bg-canvas border border-hairline rounded-md p-1.5 text-xs font-mono text-[#5db8a6]">
+                <button onclick="copyToClipboard('key-forwarder')" class="p-1.5 bg-surface-card hover:bg-surface-strong text-muted rounded-md border border-hairline"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PAGE 6: APK FORWARDER -->
+    <div id="page-forwarder" class="page-view hidden space-y-6">
+      <div class="bg-surface-card border border-hairline rounded-2xl p-6 sm:p-8 space-y-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-coral/10 text-coral border border-coral/20 flex items-center justify-center">
+              <i data-lucide="smartphone" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h2 class="font-display text-2xl font-normal text-ink">GusPay Forwarder APK</h2>
+              <p class="text-xs text-muted">Aplikasi background listener untuk meneruskan notifikasi DANA Bisnis secara otomatis.</p>
+            </div>
+          </div>
+          <a href="/downloads/gus-pay-forwarder.apk" download class="px-4 py-2.5 bg-coral hover:bg-coral-active text-white text-xs font-medium rounded-lg transition flex items-center gap-2 shadow-sm">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Download APK (Release)</span>
+          </a>
+        </div>
+
+        <hr class="border-hairline">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 rounded-xl bg-canvas border border-hairline space-y-1.5">
+            <div class="w-6 h-6 rounded-md bg-surface-card text-ink flex items-center justify-center font-bold text-xs">1</div>
+            <h4 class="text-xs font-medium text-body-strong">Install APK di HP DANA</h4>
+            <p class="text-[11px] text-muted leading-relaxed">Pasang APK di HP Android yang login akun DANA Bisnis kamu.</p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-canvas border border-hairline space-y-1.5">
+            <div class="w-6 h-6 rounded-md bg-surface-card text-ink flex items-center justify-center font-bold text-xs">2</div>
+            <h4 class="text-xs font-medium text-body-strong">Buka Izin Akses</h4>
+            <p class="text-[11px] text-muted leading-relaxed">Info Aplikasi &rarr; Izinkan Setelan Terbatas &rarr; Aktifkan Akses Notifikasi.</p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-canvas border border-hairline space-y-1.5">
+            <div class="w-6 h-6 rounded-md bg-surface-card text-ink flex items-center justify-center font-bold text-xs">3</div>
+            <h4 class="text-xs font-medium text-body-strong">Input Server & Key</h4>
+            <p class="text-[11px] text-muted leading-relaxed">Masukkan Server URL <code class="text-coral font-mono">https://gus-pay.rkhyg.xyz</code> dan Forwarder Key.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: BUAT INVOICE BARU -->
+  <div id="create-invoice-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-surface-card border border-hairline rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between">
+        <h3 class="font-display text-xl font-normal text-ink flex items-center gap-2">
+          <i data-lucide="receipt" class="w-4 h-4 text-coral"></i>
+          Buat Invoice Pembayaran
+        </h3>
+        <button onclick="closeModal('create-invoice-modal')" class="text-muted hover:text-ink"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-muted mb-1">Nominal (Rp) *</label>
+          <input type="number" id="modal-inv-amount" class="w-full bg-canvas border border-hairline rounded-lg p-2.5 text-sm text-ink font-semibold focus:outline-none focus:border-coral" placeholder="50000" required>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-muted mb-1">Order ID / Referensi</label>
+          <input type="text" id="modal-inv-order-id" class="w-full bg-canvas border border-hairline rounded-lg p-2 text-xs text-ink focus:outline-none focus:border-coral" placeholder="ORD-12345">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-muted mb-1">Nama Pembeli</label>
+          <input type="text" id="modal-inv-name" class="w-full bg-canvas border border-hairline rounded-lg p-2 text-xs text-ink focus:outline-none focus:border-coral" placeholder="Rey">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-muted mb-1">Deskripsi Pesanan</label>
+          <input type="text" id="modal-inv-desc" class="w-full bg-canvas border border-hairline rounded-lg p-2 text-xs text-ink focus:outline-none focus:border-coral" placeholder="Topup Saldo">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeModal('create-invoice-modal')" class="flex-1 py-2 bg-surface-soft hover:bg-surface-strong text-muted text-xs font-medium rounded-lg">Batal</button>
+        <button onclick="submitCreateInvoice()" class="flex-1 py-2 bg-coral hover:bg-coral-active text-white text-xs font-medium rounded-lg shadow-sm">Buat & Buka Invoice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SIMULASI NOTIFIKASI MASUK -->
+  <div id="simulate-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-surface-card border border-hairline rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between">
+        <h3 class="font-display text-xl font-normal text-ink flex items-center gap-2">
+          <i data-lucide="play" class="w-4 h-4 text-coral"></i>
+          Simulasi Pembayaran DANA
+        </h3>
+        <button onclick="closeModal('simulate-modal')" class="text-muted hover:text-ink"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-muted mb-1">Nominal Mutasi (Termasuk Kode Unik) *</label>
+        <input type="number" id="modal-sim-amount" class="w-full bg-canvas border border-hairline rounded-lg p-2.5 text-sm text-ink font-semibold focus:outline-none focus:border-coral" placeholder="50217" required>
+        <p class="text-[11px] text-muted mt-1">Masukkan nominal persis tagihan invoice yang sedang pending.</p>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeModal('simulate-modal')" class="flex-1 py-2 bg-surface-soft hover:bg-surface-strong text-muted text-xs font-medium rounded-lg">Batal</button>
+        <button onclick="submitSimulatePayment()" class="flex-1 py-2 bg-coral hover:bg-coral-active text-white text-xs font-medium rounded-lg shadow-sm">Tembak Notifikasi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APP CONTROLLER -->
+  <script>
+    let ws;
+    let cachedOverview = null;
+
+    function getActiveRoute() {
+      const p = window.location.pathname.toLowerCase();
+      if (p.includes('/invoices')) return 'invoices';
+      if (p.includes('/mutations')) return 'mutations';
+      if (p.includes('/docs')) return 'docs';
+      if (p.includes('/settings')) return 'settings';
+      if (p.includes('/forwarder')) return 'forwarder';
+      return 'dashboard';
+    }
+
+    function initPageRouting() {
+      const active = getActiveRoute();
+      document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-link').forEach(el => {
+        el.classList.remove('text-ink', 'bg-surface-card');
+        el.classList.add('text-muted');
+      });
+
+      const pageEl = document.getElementById(`page-${active}`);
+      const navEl = document.getElementById(`nav-${active}`);
+      if (pageEl) pageEl.classList.remove('hidden');
+      if (navEl) {
+        navEl.classList.remove('text-muted');
+        navEl.classList.add('text-ink', 'bg-surface-card');
+      }
+      lucide.createIcons();
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+      lucide.createIcons();
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function formatRupiah(amount) {
+      return 'Rp ' + Number(amount || 0).toLocaleString('id-ID');
+    }
+
+    function copyToClipboard(id) {
+      const input = document.getElementById(id);
+      navigator.clipboard.writeText(input.value);
+      alert('Teks berhasil disalin ke clipboard!');
+    }
+
+    async function loadOverview() {
+      try {
+        const res = await fetch('/api/v1/admin/overview');
+        if (res.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+        const json = await res.json();
+        if (json.success) {
+          cachedOverview = json.data;
+          renderOverview(json.data);
+        }
+      } catch (err) {
+        console.error('Failed to load overview:', err);
+      }
+    }
+
+    function renderOverview(data) {
+      const { stats, settings, recentInvoices, recentMutations, recentLogs } = data;
+
+      // Stats
+      document.getElementById('stat-total-paid').innerText = formatRupiah(stats.totalPaid);
+      document.getElementById('stat-success-count').innerText = `${stats.totalSuccessCount} Transaksi Sukses`;
+      document.getElementById('stat-total-pending').innerText = stats.totalPending;
+      document.getElementById('stat-total-invoices').innerText = stats.totalInvoices;
+      document.getElementById('stat-total-mutations').innerText = stats.totalMutations;
+
+      // Settings
+      document.getElementById('masked-qris-display').value = settings.staticQrisMasked || '';
+      document.getElementById('setting-expiry').value = settings.expiryMinutes || 15;
+      document.getElementById('setting-min-code').value = settings.minUniqueCode || 1;
+      document.getElementById('setting-max-code').value = settings.maxUniqueCode || 499;
+      document.getElementById('key-secret').value = settings.secretApiKey || '';
+      document.getElementById('key-forwarder').value = settings.forwarderApiKey || '';
+
+      // Dashboard recent invoices
+      const dInvBody = document.getElementById('dashboard-invoices-body');
+      if (recentInvoices.length === 0) {
+        dInvBody.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-muted-soft">Belum ada invoice</td></tr>';
+      } else {
+        dInvBody.innerHTML = recentInvoices.slice(0, 6).map(inv => `
+          <tr class="hover:bg-surface-soft/60">
+            <td class="py-3 font-mono font-medium text-ink">${inv.id}<br><span class="text-muted font-sans text-[11px]">${inv.customerName}</span></td>
+            <td class="py-3 font-medium text-ink">${formatRupiah(inv.totalAmount)}</td>
+            <td class="py-3">${renderStatusBadge(inv.status)}</td>
+            <td class="py-3 text-right">
+              <a href="/pay/${inv.id}" target="_blank" class="px-2 py-1 bg-surface-soft hover:bg-surface-strong text-[11px] text-coral rounded-md border border-hairline font-medium">Buka &rarr;</a>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // Dashboard recent mutations
+      const dMutBody = document.getElementById('dashboard-mutations-body');
+      if (recentMutations.length === 0) {
+        dMutBody.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-muted-soft">Belum ada mutasi masuk</td></tr>';
+      } else {
+        dMutBody.innerHTML = recentMutations.slice(0, 6).map(mut => `
+          <tr class="hover:bg-surface-soft/60">
+            <td class="py-3 text-muted">${new Date(mut.createdAt).toLocaleTimeString('id-ID')}</td>
+            <td class="py-3 font-semibold text-coral">${formatRupiah(mut.amount)}</td>
+            <td class="py-3 text-body truncate max-w-[150px]">${mut.raw?.title || 'DANA QRIS'}</td>
+            <td class="py-3 text-right font-mono text-ink">${mut.matchedInvoiceId || '<span class="text-muted-soft">-</span>'}</td>
+          </tr>
+        `).join('');
+      }
+
+      // Invoices Page Full Table
+      const invFullBody = document.getElementById('invoices-table-body');
+      if (recentInvoices.length === 0) {
+        invFullBody.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-muted-soft">Belum ada invoice</td></tr>';
+      } else {
+        invFullBody.innerHTML = recentInvoices.map(inv => `
+          <tr class="hover:bg-surface-soft/60">
+            <td class="py-3 font-mono font-medium text-ink">${inv.id}</td>
+            <td class="py-3"><div class="font-medium text-ink">${inv.orderId}</div><div class="text-[11px] text-muted">${inv.customerName}</div></td>
+            <td class="py-3">${formatRupiah(inv.baseAmount)}</td>
+            <td class="py-3 font-mono text-[#d4a017]">+${inv.uniqueCode}</td>
+            <td class="py-3 font-bold text-ink">${formatRupiah(inv.totalAmount)}</td>
+            <td class="py-3">${renderStatusBadge(inv.status)}</td>
+            <td class="py-3 text-muted text-[11px]">${inv.paidAt ? 'Paid: ' + new Date(inv.paidAt).toLocaleTimeString('id-ID') : 'Exp: ' + new Date(inv.expiredAt).toLocaleTimeString('id-ID')}</td>
+            <td class="py-3 text-right">
+              <a href="/pay/${inv.id}" target="_blank" class="px-2.5 py-1 bg-surface-soft hover:bg-surface-strong text-coral border border-hairline rounded-md text-xs font-medium">Checkout &rarr;</a>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // Mutations Page Full Table
+      const mutFullBody = document.getElementById('mutations-table-body');
+      if (recentMutations.length === 0 && recentLogs.length === 0) {
+        mutFullBody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-muted-soft">Belum ada log mutasi</td></tr>';
+      } else {
+        mutFullBody.innerHTML = (recentMutations.length > 0 ? recentMutations : recentLogs).map(item => `
+          <tr class="hover:bg-surface-soft/60">
+            <td class="py-3 text-muted font-mono">${new Date(item.createdAt || item.timestamp).toLocaleTimeString('id-ID')}</td>
+            <td class="py-3 text-body-strong font-medium">${item.raw?.packageName || item.packageName || 'id.dana'}</td>
+            <td class="py-3 font-bold text-coral">${formatRupiah(item.amount || item.detectedAmount)}</td>
+            <td class="py-3 text-muted font-mono text-[11px]">${item.raw?.body || item.body || item.raw?.title || '-'}</td>
+            <td class="py-3 text-right font-mono text-ink">${item.matchedInvoiceId || '<span class="text-muted-soft">Unmatched</span>'}</td>
+          </tr>
+        `).join('');
+      }
+
+      lucide.createIcons();
+    }
+
+    function renderStatusBadge(status) {
+      if (status === 'PAID') {
+        return '<span class="px-2 py-0.5 rounded-full bg-[#5db872]/15 text-[#5db872] border border-[#5db872]/30 text-[11px] font-medium">PAID</span>';
+      }
+      if (status === 'PENDING') {
+        return '<span class="px-2 py-0.5 rounded-full bg-[#d4a017]/15 text-[#d4a017] border border-[#d4a017]/30 text-[11px] font-medium">PENDING</span>';
+      }
+      if (status === 'EXPIRED') {
+        return '<span class="px-2 py-0.5 rounded-full bg-surface-soft text-muted border border-hairline text-[11px] font-medium">EXPIRED</span>';
+      }
+      return `<span class="px-2 py-0.5 rounded-full bg-surface-soft text-body text-[11px]">${status}</span>`;
+    }
+
+    async function revealQrisString() {
+      const password = document.getElementById('reveal-password-input').value;
+      if (!password) {
+        alert('Masukkan password admin');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/v1/admin/reveal-qris', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const json = await res.json();
+        if (json.success) {
+          const box = document.getElementById('revealed-qris-box');
+          box.innerText = json.qrisString;
+          box.classList.remove('hidden');
+          document.getElementById('reveal-password-input').value = '';
+        } else {
+          alert('Gagal: ' + json.message);
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function handleChangePassword() {
+      const oldPassword = document.getElementById('cp-old-password').value;
+      const newPassword = document.getElementById('cp-new-password').value;
+
+      if (!oldPassword || !newPassword) {
+        alert('Isi kedua kolom password');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/v1/auth/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ oldPassword, newPassword })
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert('Password admin berhasil diubah!');
+          document.getElementById('cp-old-password').value = '';
+          document.getElementById('cp-new-password').value = '';
+        } else {
+          alert('Gagal: ' + json.message);
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function saveSettings() {
+      const payload = {
+        expiryMinutes: document.getElementById('setting-expiry').value,
+        minUniqueCode: document.getElementById('setting-min-code').value,
+        maxUniqueCode: document.getElementById('setting-max-code').value,
+      };
+
+      try {
+        const res = await fetch('/api/v1/admin/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert('Aturan gateway berhasil disimpan!');
+          loadOverview();
+        } else {
+          alert('Gagal simpan: ' + json.message);
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function regenerateKey(type) {
+      if (!confirm(`Yakin ingin generate ulang ${type} key? Kunci lama tidak akan berlaku lagi.`)) return;
+      try {
+        const res = await fetch('/api/v1/admin/keys/regenerate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type })
+        });
+        const json = await res.json();
+        if (json.success) {
+          loadOverview();
+        } else {
+          alert('Gagal: ' + json.message);
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function submitCreateInvoice() {
+      const amount = document.getElementById('modal-inv-amount').value;
+      const orderId = document.getElementById('modal-inv-order-id').value;
+      const customerName = document.getElementById('modal-inv-name').value;
+      const description = document.getElementById('modal-inv-desc').value;
+
+      if (!amount || amount <= 0) {
+        alert('Masukkan nominal valid');
+        return;
+      }
+
+      try {
+        const apiKey = document.getElementById('key-secret').value;
+        const res = await fetch('/api/v1/invoices', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+          },
+          body: JSON.stringify({ amount, orderId, customerName, description })
+        });
+        const json = await res.json();
+        if (json.success) {
+          closeModal('create-invoice-modal');
+          loadOverview();
+          window.open(`/pay/${json.data.invoiceId}`, '_blank');
+        } else {
+          alert('Gagal: ' + json.message);
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function submitSimulatePayment() {
+      const amount = document.getElementById('modal-sim-amount').value;
+      if (!amount || amount <= 0) {
+        alert('Masukkan nominal mutasi');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/v1/admin/simulate-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount })
+        });
+        const json = await res.json();
+        alert(json.message);
+        closeModal('simulate-modal');
+        loadOverview();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function handleLogout() {
+      if (!confirm('Keluar dari dashboard admin?')) return;
+      await fetch('/api/v1/auth/logout', { method: 'POST' });
+      window.location.href = '/login';
+    }
+
+    function initWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}`;
+      ws = new WebSocket(wsUrl);
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.event === 'invoice.paid' || data.event === 'mutation.received' || data.event === 'invoice.created') {
+            loadOverview();
+          }
+        } catch (e) {}
+      };
+
+      ws.onclose = () => {
+        setTimeout(initWebSocket, 3000);
+      };
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initPageRouting();
+      loadOverview();
+      initWebSocket();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

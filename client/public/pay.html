@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pembayaran QRIS — GusPay</title>
+  <!-- Google Fonts: Newsreader (Editorial Serif) & Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Newsreader', 'Cormorant Garamond', 'Georgia', 'serif'],
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            canvas: '#faf9f5',
+            surface: {
+              soft: '#f5f0e8',
+              card: '#efe9de',
+              strong: '#e8e0d2',
+              dark: '#181715',
+              'dark-elevated': '#252320',
+              'dark-soft': '#1f1e1b',
+            },
+            coral: {
+              DEFAULT: '#cc785c',
+              active: '#a9583e',
+              disabled: '#e6dfd8',
+            },
+            ink: '#141413',
+            body: {
+              DEFAULT: '#3d3d3a',
+              strong: '#252523',
+            },
+            muted: {
+              DEFAULT: '#6c6a64',
+              soft: '#8e8b82',
+            },
+            hairline: {
+              DEFAULT: '#e6dfd8',
+              soft: '#ebe6df',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #faf9f5;
+      color: #3d3d3a;
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Newsreader', serif;
+      letter-spacing: -0.02em;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-6 antialiased selection:bg-[#cc785c] selection:text-white">
+
+  <div class="max-w-md w-full bg-surface-card border border-hairline rounded-2xl p-6 sm:p-8 shadow-sm space-y-6 relative">
+    
+    <!-- Top Merchant Header -->
+    <div class="text-center space-y-1">
+      <div class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-coral/10 text-coral border border-coral/20 mb-1">
+        <!-- Anthropic star glyph -->
+        <svg class="w-5 h-5 text-coral" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L13.8 8.2L20 10L13.8 11.8L12 18L10.2 11.8L4 10L10.2 8.2L12 2Z" />
+        </svg>
+      </div>
+      <h1 class="font-display text-2xl font-normal text-ink" id="merchant-name">Yumeko Store</h1>
+      <p class="text-xs text-muted" id="order-desc">Tagihan Pembayaran QRIS Otomatis</p>
+    </div>
+
+    <!-- QRIS Card Container (Visible when PENDING) -->
+    <div id="qris-box" class="space-y-5">
+      
+      <!-- Total Amount Box with unique code highlight -->
+      <div class="bg-canvas border border-hairline rounded-xl p-4 text-center space-y-1">
+        <div class="text-[11px] font-medium uppercase tracking-wider text-muted">Total Tagihan (Transfer Pas)</div>
+        <div class="text-3xl font-display text-ink font-normal tracking-tight" id="total-amount">Rp 0</div>
+        <div class="inline-block text-[11px] text-coral font-medium bg-coral/10 px-2.5 py-0.5 rounded-full border border-coral/20">
+          Transfer persis 3 digit terakhir untuk verifikasi otomatis
+        </div>
+      </div>
+
+      <!-- QR Code View -->
+      <div class="bg-white p-5 rounded-xl border border-hairline flex flex-col items-center justify-center shadow-sm">
+        <div id="qr-loading" class="text-xs text-muted py-14 font-mono">Membuat Dynamic QRIS...</div>
+        <img id="qr-image" src="" alt="QRIS Code" class="w-60 h-60 object-contain hidden">
+        <div class="text-[11px] text-muted-soft font-mono mt-3 flex items-center gap-1.5">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-[#5db872]"></i>
+          <span>QRIS Standar Nasional Bank Indonesia (EMVCo)</span>
+        </div>
+      </div>
+
+      <!-- Countdown Expiry Timer -->
+      <div class="flex items-center justify-between px-2 text-xs text-muted border-t border-hairline pt-3">
+        <div class="flex items-center gap-1.5">
+          <i data-lucide="clock" class="w-4 h-4 text-coral"></i>
+          <span>Batas Waktu Bayar:</span>
+        </div>
+        <span id="countdown" class="font-mono font-bold text-ink text-sm">--:--</span>
+      </div>
+
+      <!-- Instruction Steps (Accordion / Minimal List) -->
+      <div class="bg-surface-soft border border-hairline rounded-xl p-4 space-y-2 text-xs text-body">
+        <div class="font-medium text-body-strong flex items-center gap-1.5">
+          <i data-lucide="help-circle" class="w-3.5 h-3.5 text-coral"></i>
+          Petunjuk Pembayaran:
+        </div>
+        <ol class="list-decimal list-inside space-y-1 text-muted text-[11px] leading-relaxed">
+          <li>Buka aplikasi m-Banking atau E-Wallet (BCA, Mandiri, BRI, DANA, GoPay, OVO, ShopeePay, dll).</li>
+          <li>Pilih menu <strong>Scan / Bayar QRIS</strong> lalu arahkan kamera ke barcode di atas.</li>
+          <li>Nominal transfer akan terkunci secara <strong>otomatis</strong>.</li>
+          <li>Konfirmasi pembayaran di aplikasi kamu.</li>
+          <li>Sistem GusPay akan memverifikasi dalam 1-3 detik tanpa perlu upload bukti struk.</li>
+        </ol>
+      </div>
+
+    </div>
+
+    <!-- PAID SUCCESS VIEW -->
+    <div id="paid-box" class="hidden text-center py-6 space-y-4">
+      <div class="w-14 h-14 rounded-full bg-[#5db872]/15 text-[#5db872] border border-[#5db872]/30 flex items-center justify-center mx-auto">
+        <i data-lucide="check" class="w-7 h-7"></i>
+      </div>
+      <div>
+        <h2 class="font-display text-2xl font-normal text-ink">Pembayaran Sukses</h2>
+        <p class="text-xs text-muted mt-1">Transaksi telah berhasil diverifikasi secara otomatis oleh sistem.</p>
+      </div>
+      <div class="p-4 rounded-xl bg-canvas border border-hairline text-left text-xs space-y-1.5 font-mono">
+        <div class="flex justify-between text-muted"><span>Invoice ID:</span><span id="paid-invoice-id" class="text-ink font-semibold">-</span></div>
+        <div class="flex justify-between text-muted"><span>Order ID:</span><span id="paid-order-id" class="text-ink">-</span></div>
+        <div class="flex justify-between text-muted"><span>Total Dibayar:</span><span id="paid-amount" class="text-coral font-bold">-</span></div>
+        <div class="flex justify-between text-muted"><span>Waktu Verifikasi:</span><span id="paid-time" class="text-ink">-</span></div>
+      </div>
+    </div>
+
+    <!-- EXPIRED VIEW -->
+    <div id="expired-box" class="hidden text-center py-6 space-y-3">
+      <div class="w-14 h-14 rounded-full bg-[#c64545]/15 text-[#c64545] border border-[#c64545]/30 flex items-center justify-center mx-auto">
+        <i data-lucide="alert-circle" class="w-7 h-7"></i>
+      </div>
+      <h2 class="font-display text-2xl font-normal text-ink">Tagihan Kadaluarsa</h2>
+      <p class="text-xs text-muted">Batas waktu transfer untuk transaksi ini telah habis. Silakan buat pesanan baru.</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center pt-2 border-t border-hairline">
+      <p class="text-[11px] text-muted-soft font-mono">Secured by GusPay Autonomous Engine</p>
+    </div>
+
+  </div>
+
+  <script>
+    const pathParts = window.location.pathname.split('/');
+    const invoiceId = pathParts[pathParts.length - 1];
+
+    let timerInterval = null;
+    let ws = null;
+
+    function formatRupiah(amount) {
+      return 'Rp ' + Number(amount || 0).toLocaleString('id-ID');
+    }
+
+    async function fetchInvoice() {
+      try {
+        const res = await fetch(`/api/v1/invoices/${invoiceId}`);
+        const json = await res.json();
+        if (!json.success) {
+          document.getElementById('merchant-name').innerText = 'Invoice Tidak Ditemukan';
+          document.getElementById('order-desc').innerText = json.message;
+          return;
+        }
+
+        renderInvoice(json.data);
+      } catch (err) {
+        console.error('Error fetching invoice:', err);
+      }
+    }
+
+    function renderInvoice(data) {
+      document.getElementById('merchant-name').innerText = data.merchantName || 'Yumeko Store';
+      document.getElementById('order-desc').innerText = `${data.description || 'Pembayaran'} • #${data.orderId}`;
+      document.getElementById('total-amount').innerText = formatRupiah(data.totalAmount);
+
+      const qrisBox = document.getElementById('qris-box');
+      const paidBox = document.getElementById('paid-box');
+      const expiredBox = document.getElementById('expired-box');
+
+      if (data.status === 'PAID') {
+        qrisBox.classList.add('hidden');
+        expiredBox.classList.add('hidden');
+        paidBox.classList.remove('hidden');
+
+        document.getElementById('paid-invoice-id').innerText = data.id;
+        document.getElementById('paid-order-id').innerText = data.orderId;
+        document.getElementById('paid-amount').innerText = formatRupiah(data.totalAmount);
+        document.getElementById('paid-time').innerText = new Date(data.paidAt).toLocaleTimeString('id-ID') + ' WIB';
+        if (timerInterval) clearInterval(timerInterval);
+        return;
+      }
+
+      if (data.status === 'EXPIRED') {
+        qrisBox.classList.add('hidden');
+        paidBox.classList.add('hidden');
+        expiredBox.classList.remove('hidden');
+        if (timerInterval) clearInterval(timerInterval);
+        return;
+      }
+
+      // Status PENDING
+      qrisBox.classList.remove('hidden');
+      paidBox.classList.add('hidden');
+      expiredBox.classList.add('hidden');
+
+      if (data.qrImage) {
+        document.getElementById('qr-loading').classList.add('hidden');
+        const img = document.getElementById('qr-image');
+        img.src = data.qrImage;
+        img.classList.remove('hidden');
+      } else {
+        document.getElementById('qr-loading').innerText = 'QRIS belum disetting di .env server';
+      }
+
+      startCountdown(data.expiredAt);
+      lucide.createIcons();
+    }
+
+    function startCountdown(expiredAtStr) {
+      if (timerInterval) clearInterval(timerInterval);
+      const targetTime = new Date(expiredAtStr).getTime();
+
+      function update() {
+        const now = Date.now();
+        const diff = targetTime - now;
+
+        if (diff <= 0) {
+          clearInterval(timerInterval);
+          document.getElementById('countdown').innerText = '00:00';
+          fetchInvoice();
+          return;
+        }
+
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        document.getElementById('countdown').innerText = 
+          `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      }
+
+      update();
+      timerInterval = setInterval(update, 1000);
+    }
+
+    function initWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}`;
+      ws = new WebSocket(wsUrl);
+
+      ws.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.event === 'invoice.paid' && (payload.data.id === invoiceId || payload.data.orderId === invoiceId)) {
+            fetchInvoice();
+          }
+        } catch (e) {}
+      };
+
+      ws.onclose = () => {
+        setTimeout(initWebSocket, 3000);
+      };
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchInvoice();
+      initWebSocket();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

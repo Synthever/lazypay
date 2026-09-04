@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Environment secrets & Data
+.env
+.env.local
+.env.*.local
+data/
+*.log
+
+# Mobile build binaries (APKs)
+*.apk
+*.aab
+build/
+downloads/
+.flutter-plugins
+.flutter-plugins-dependencies
+.dart_tool/
+.pub-cache/
+.pub/
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml

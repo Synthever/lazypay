@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Admin — GusPay</title>
+  <!-- Google Fonts: Newsreader (Editorial Serif) & Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Newsreader', 'Cormorant Garamond', 'Georgia', 'serif'],
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            canvas: '#faf9f5',
+            surface: {
+              soft: '#f5f0e8',
+              card: '#efe9de',
+              strong: '#e8e0d2',
+              dark: '#181715',
+              'dark-elevated': '#252320',
+              'dark-soft': '#1f1e1b',
+            },
+            coral: {
+              DEFAULT: '#cc785c',
+              active: '#a9583e',
+              disabled: '#e6dfd8',
+            },
+            ink: '#141413',
+            body: {
+              DEFAULT: '#3d3d3a',
+              strong: '#252523',
+            },
+            muted: {
+              DEFAULT: '#6c6a64',
+              soft: '#8e8b82',
+            },
+            hairline: {
+              DEFAULT: '#e6dfd8',
+              soft: '#ebe6df',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #faf9f5;
+      color: #3d3d3a;
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Newsreader', serif;
+      letter-spacing: -0.02em;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 sm:p-6 antialiased selection:bg-[#cc785c] selection:text-white">
+
+  <!-- Top Simple Brand -->
+  <div class="max-w-md w-full mx-auto pt-6 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <!-- Anthropic-style 4-spoke star glyph -->
+      <svg class="w-4 h-4 text-ink" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2L13.8 8.2L20 10L13.8 11.8L12 18L10.2 11.8L4 10L10.2 8.2L12 2Z" />
+      </svg>
+      <span class="font-display text-xl font-medium text-ink">GusPay</span>
+    </div>
+    <span class="text-xs font-mono text-muted-soft">v1.2.0 • secure</span>
+  </div>
+
+  <!-- Login Card (Warm Editorial) -->
+  <div class="max-w-md w-full mx-auto my-auto py-8">
+    <div class="bg-surface-card border border-hairline rounded-2xl p-8 shadow-sm space-y-6">
+      
+      <div>
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-soft border border-hairline text-xs font-medium text-muted mb-3">
+          <span class="w-1.5 h-1.5 rounded-full bg-coral"></span>
+          <span>Authentication Portal</span>
+        </div>
+        <h1 class="font-display text-3xl font-normal text-ink tracking-tight">Masuk ke Dashboard</h1>
+        <p class="text-sm text-muted mt-1.5 leading-relaxed">Kelola transaksi, pantau webhook DANA Bisnis, dan atur integrasi gateway pembayaran.</p>
+      </div>
+
+      <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4 pt-1">
+        <div>
+          <label class="block text-xs font-medium text-body-strong mb-1.5">Kata Sandi Admin</label>
+          <div class="relative">
+            <input 
+              type="password" 
+              id="password" 
+              placeholder="Masukkan password admin" 
+              required 
+              class="w-full bg-canvas border border-hairline rounded-lg px-3.5 py-2.5 text-sm text-ink placeholder-muted-soft focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral transition"
+            >
+            <button 
+              type="button" 
+              onclick="togglePassword()" 
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-soft hover:text-ink transition"
+            >
+              <i data-lucide="eye" id="eye-icon" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="error-message" class="hidden text-xs text-[#c64545] bg-[#c64545]/10 border border-[#c64545]/20 p-3 rounded-lg font-medium"></div>
+
+        <button 
+          type="submit" 
+          id="submit-btn"
+          class="w-full py-2.5 bg-coral hover:bg-coral-active text-white text-sm font-medium rounded-lg transition shadow-sm flex items-center justify-center gap-2 mt-2"
+        >
+          <span>Buka Dashboard</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Footer Notice -->
+  <div class="max-w-md w-full mx-auto pb-4 text-center">
+    <p class="text-xs text-muted-soft">GusPay Autonomous DANA Bisnis Engine • Protected Gateway</p>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    function togglePassword() {
+      const input = document.getElementById('password');
+      const icon = document.getElementById('eye-icon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const password = document.getElementById('password').value;
+      const errBox = document.getElementById('error-message');
+      const btn = document.getElementById('submit-btn');
+
+      errBox.classList.add('hidden');
+      btn.disabled = true;
+      btn.innerHTML = 'Memverifikasi...';
+
+      try {
+        const res = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          window.location.href = '/dashboard';
+        } else {
+          errBox.innerText = json.message || 'Password salah';
+          errBox.classList.remove('hidden');
+          btn.disabled = false;
+          btn.innerHTML = `<span>Buka Dashboard</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+          lucide.createIcons();
+        }
+      } catch (err) {
+        errBox.innerText = 'Gagal menghubungi server: ' + err.message;
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = `<span>Buka Dashboard</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+        lucide.createIcons();
+      }
+    }
+  </script>
+</body>
+</html>
