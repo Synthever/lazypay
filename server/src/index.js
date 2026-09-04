@@ -440,23 +440,27 @@ const sendHtml = (file, res) => {
   }
 };
 
-// Login Page
+// 1. Landing Page at Root `/`
+app.get('/', (req, res) => sendHtml('landing.html', res));
+
+// 2. Public API Docs at `/docs`
+app.get('/docs', (req, res) => sendHtml('docs.html', res));
+
+// 3. Login Page
 app.get('/login', (req, res) => sendHtml('login.html', res));
 
-// Public Checkout Page
+// 4. Public Checkout Page
 app.get('/pay/:id', (req, res) => sendHtml('pay.html', res));
 
-// Dedicated Pages (Dashboard, Invoices, Mutations, Settings, Docs, Forwarder)
-app.get('/', (req, res) => res.redirect('/dashboard'));
+// 5. Protected Admin Dashboard with Sidebar (/dashboard, /invoices, /mutations, /settings, /forwarder)
 app.get('/dashboard', requireAdminAuth, (req, res) => sendHtml('dashboard.html', res));
 app.get('/invoices', requireAdminAuth, (req, res) => sendHtml('dashboard.html', res));
 app.get('/mutations', requireAdminAuth, (req, res) => sendHtml('dashboard.html', res));
 app.get('/settings', requireAdminAuth, (req, res) => sendHtml('dashboard.html', res));
-app.get('/docs', requireAdminAuth, (req, res) => sendHtml('dashboard.html', res));
 app.get('/forwarder', requireAdminAuth, (req, res) => sendHtml('dashboard.html', res));
 
 // Fallback
-app.get('*', (req, res) => res.redirect('/dashboard'));
+app.get('*', (req, res) => res.redirect('/'));
 
 const PORT = process.env.PORT || 8940;
 server.listen(PORT, () => {
