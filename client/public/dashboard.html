@@ -67,15 +67,18 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col md:flex-row antialiased selection:bg-[#cc785c] selection:text-white">
+<body class="min-h-screen flex antialiased selection:bg-[#cc785c] selection:text-white relative overflow-x-hidden">
 
-  <!-- LEFT SIDEBAR (Desktop) -->
-  <aside class="w-full md:w-64 bg-surface-card border-r border-hairline flex flex-col justify-between shrink-0 md:h-screen md:sticky md:top-0">
+  <!-- MOBILE SIDEBAR BACKDROP OVERLAY -->
+  <div id="sidebar-backdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 hidden md:hidden transition-opacity"></div>
+
+  <!-- OFF-CANVAS / DESKTOP SIDEBAR -->
+  <aside id="main-sidebar" class="fixed md:sticky top-0 left-0 z-50 h-screen w-64 bg-surface-card border-r border-hairline flex flex-col justify-between shrink-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none">
     
     <!-- Sidebar Top Brand & Nav -->
     <div class="p-5 space-y-6">
       
-      <!-- Brand Logo -->
+      <!-- Brand Logo + Close Button (Mobile) -->
       <div class="flex items-center justify-between">
         <a href="/dashboard" class="flex items-center gap-2 group">
           <svg class="w-5 h-5 text-ink group-hover:text-coral transition" viewBox="0 0 24 24" fill="currentColor">
@@ -83,7 +86,11 @@
           </svg>
           <span class="font-display text-2xl font-normal text-ink">GusPay</span>
         </a>
-        <span class="text-[10px] px-2 py-0.5 rounded-full bg-surface-soft text-muted border border-hairline font-mono font-medium">Admin</span>
+        
+        <!-- Mobile Close Button -->
+        <button onclick="toggleSidebar(false)" class="md:hidden p-1 text-muted hover:text-ink rounded-lg hover:bg-surface-soft">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
       </div>
 
       <!-- Navigation Menu List -->
@@ -137,25 +144,34 @@
   <!-- MAIN CONTENT AREA -->
   <div class="flex-1 flex flex-col min-w-0">
     
-    <!-- Top Header Bar -->
-    <header class="h-16 border-b border-hairline bg-canvas/90 backdrop-blur px-6 flex items-center justify-between sticky top-0 z-30">
+    <!-- Top Header Bar with Mobile Hamburger -->
+    <header class="h-16 border-b border-hairline bg-canvas/90 backdrop-blur px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
+      
+      <!-- Left: Hamburger Toggle & Breadcrumb -->
       <div class="flex items-center gap-3">
+        <!-- Hamburger Button for Mobile -->
+        <button onclick="toggleSidebar(true)" class="md:hidden p-2 text-ink hover:bg-surface-card rounded-lg border border-hairline transition flex items-center justify-center" aria-label="Buka Menu">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+
         <span class="text-xs font-mono text-muted uppercase tracking-wider" id="header-breadcrumb">Admin / Dashboard</span>
       </div>
-      <div class="flex items-center gap-3">
+
+      <!-- Right: Quick Actions -->
+      <div class="flex items-center gap-2 sm:gap-3">
         <button onclick="openModal('create-invoice-modal')" class="px-3 py-1.5 bg-coral hover:bg-coral-active text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-          <span>Buat Invoice</span>
+          <span class="hidden sm:inline">Buat</span><span>Invoice</span>
         </button>
         <a href="/" target="_blank" class="px-3 py-1.5 bg-surface-card hover:bg-surface-strong text-ink border border-hairline text-xs font-medium rounded-lg transition flex items-center gap-1.5">
           <i data-lucide="external-link" class="w-3.5 h-3.5 text-coral"></i>
-          <span>Lihat Web</span>
+          <span class="hidden sm:inline">Lihat</span><span>Web</span>
         </a>
       </div>
     </header>
 
-    <!-- VIEWS -->
-    <main class="flex-1 p-6 sm:p-8 max-w-6xl w-full mx-auto space-y-8">
+    <!-- VIEWS CONTAINER -->
+    <main class="flex-1 p-4 sm:p-8 max-w-6xl w-full mx-auto space-y-8">
       
       <!-- VIEW 1: DASHBOARD -->
       <div id="page-dashboard" class="page-view hidden space-y-8">
@@ -215,7 +231,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           <!-- Recent Invoices -->
-          <div class="bg-surface-card border border-hairline rounded-xl p-6 flex flex-col space-y-4">
+          <div class="bg-surface-card border border-hairline rounded-xl p-5 sm:p-6 flex flex-col space-y-4">
             <div class="flex items-center justify-between">
               <h2 class="font-display text-lg font-normal text-ink flex items-center gap-2">
                 <i data-lucide="receipt" class="w-4 h-4 text-coral"></i>
@@ -241,7 +257,7 @@
           </div>
 
           <!-- Recent Mutations -->
-          <div class="bg-surface-card border border-hairline rounded-xl p-6 flex flex-col space-y-4">
+          <div class="bg-surface-card border border-hairline rounded-xl p-5 sm:p-6 flex flex-col space-y-4">
             <div class="flex items-center justify-between">
               <h2 class="font-display text-lg font-normal text-ink flex items-center gap-2">
                 <i data-lucide="activity" class="w-4 h-4 text-coral"></i>
@@ -277,7 +293,7 @@
             <div class="text-xs font-mono uppercase tracking-wider text-muted-soft mb-1">Transaction Ledger</div>
             <h1 class="font-display text-3xl font-normal text-ink">Daftar Tagihan & Invoice</h1>
           </div>
-          <button onclick="openModal('create-invoice-modal')" class="px-3.5 py-2 bg-coral hover:bg-coral-active text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm">
+          <button onclick="openModal('create-invoice-modal')" class="px-3.5 py-2 bg-coral hover:bg-coral-active text-white text-xs font-medium rounded-lg transition flex items-center gap-1.5 shadow-sm self-start sm:self-auto">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
             <span>Buat Invoice Baru</span>
           </button>
@@ -348,7 +364,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           <!-- QRIS Info & Protected View -->
-          <div class="bg-surface-card border border-hairline rounded-xl p-6 space-y-4">
+          <div class="bg-surface-card border border-hairline rounded-xl p-5 sm:p-6 space-y-4">
             <div class="flex items-center justify-between">
               <h3 class="font-display text-lg font-normal text-ink flex items-center gap-2">
                 <i data-lucide="shield-check" class="w-4 h-4 text-coral"></i>
@@ -406,7 +422,7 @@
           <div class="space-y-6">
             
             <!-- Change Password Box -->
-            <div class="bg-surface-card border border-hairline rounded-xl p-6 space-y-4">
+            <div class="bg-surface-card border border-hairline rounded-xl p-5 sm:p-6 space-y-4">
               <h3 class="font-display text-lg font-normal text-ink flex items-center gap-2">
                 <i data-lucide="key-round" class="w-4 h-4 text-coral"></i>
                 Ganti Kata Sandi Dashboard
@@ -429,7 +445,7 @@
             </div>
 
             <!-- API Keys -->
-            <div class="bg-surface-card border border-hairline rounded-xl p-6 space-y-4">
+            <div class="bg-surface-card border border-hairline rounded-xl p-5 sm:p-6 space-y-4">
               <h3 class="font-display text-lg font-normal text-ink flex items-center gap-2">
                 <i data-lucide="key" class="w-4 h-4 text-coral"></i>
                 API & Forwarder Keys
@@ -576,6 +592,20 @@
   <script>
     let ws;
     let cachedOverview = null;
+
+    // Toggle Sidebar Function (Open & Close on Mobile / Responsive)
+    function toggleSidebar(open) {
+      const sidebar = document.getElementById('main-sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      
+      if (open) {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
 
     function getActiveRoute() {
       const p = window.location.pathname.toLowerCase();
