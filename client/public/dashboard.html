@@ -310,7 +310,7 @@
                 <th class="pb-3">Total Transfer</th>
                 <th class="pb-3">Status</th>
                 <th class="pb-3">Waktu Expiry/Paid</th>
-                <th class="pb-3 text-right">Link Checkout</th>
+                <th class="pb-3 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody id="invoices-table-body" class="divide-y divide-hairline/70 text-body">
@@ -700,7 +700,7 @@
             <td class="py-3 font-medium text-ink">${formatRupiah(inv.totalAmount)}</td>
             <td class="py-3">${renderStatusBadge(inv.status)}</td>
             <td class="py-3 text-right">
-              <a href="/pay/${inv.id}" target="_blank" class="px-2 py-1 bg-surface-soft hover:bg-surface-strong text-[11px] text-coral rounded-md border border-hairline font-medium">Buka &rarr;</a>
+              <a href="/pay/${inv.id}" target="_blank" class="px-2 py-1 bg-surface-soft hover:bg-surface-strong text-[11px] text-coral rounded-md border border-hairline font-medium">${inv.status === 'PAID' ? 'Lihat Invoice &rarr;' : 'Bayar &rarr;'}</a>
             </td>
           </tr>
         `).join('');
@@ -736,7 +736,7 @@
             <td class="py-3">${renderStatusBadge(inv.status)}</td>
             <td class="py-3 text-muted text-[11px]">${inv.paidAt ? 'Paid: ' + new Date(inv.paidAt).toLocaleTimeString('id-ID') : 'Exp: ' + new Date(inv.expiredAt).toLocaleTimeString('id-ID')}</td>
             <td class="py-3 text-right">
-              <a href="/pay/${inv.id}" target="_blank" class="px-2.5 py-1 bg-surface-soft hover:bg-surface-strong text-coral border border-hairline rounded-md text-xs font-medium">Checkout &rarr;</a>
+              <a href="/pay/${inv.id}" target="_blank" class="px-2.5 py-1 bg-surface-soft hover:bg-surface-strong text-coral border border-hairline rounded-md text-xs font-medium">${inv.status === 'PAID' ? 'Lihat Invoice &rarr;' : 'Checkout &rarr;'}</a>
             </td>
           </tr>
         `).join('');
