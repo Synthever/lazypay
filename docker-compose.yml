@@ -1,0 +1,15 @@
+services:
+  guspay:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: guspay
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8940:8940"
+    volumes:
+      - ./data:/app/data
+      - ./downloads:/app/downloads
+      - ./server/.env:/app/server/.env
+    env_file:
+      - .env
