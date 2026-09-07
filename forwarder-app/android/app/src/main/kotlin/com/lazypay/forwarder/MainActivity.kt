@@ -1,4 +1,4 @@
-package com.guspay.forwarder
+package com.lazypay.forwarder
 
 import io.flutter.embedding.android.FlutterActivity
 

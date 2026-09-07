@@ -24,7 +24,7 @@ const defaultData = {
   },
   settings: {
     merchantName: process.env.MERCHANT_NAME || 'Yumeko Store',
-    secretApiKey: 'guspay_sec_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+    secretApiKey: 'lazypay_sec_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
     forwarderApiKey: 'fwd_' + Math.random().toString(36).substring(2, 15),
     callbackUrl: '',
     minUniqueCode: parseInt(process.env.MIN_UNIQUE_CODE, 10) || 1,

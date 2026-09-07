@@ -1,5 +1,5 @@
 {
-  "name": "gus-pay-server",
+  "name": "lazypay-server",
   "version": "1.0.0",
   "description": "Autonomous DANA Bisnis QRIS Payment Gateway Backend",
   "main": "src/index.js",

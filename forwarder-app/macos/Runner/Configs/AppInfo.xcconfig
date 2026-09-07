@@ -8,7 +8,7 @@
 PRODUCT_NAME = forwarder
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.guspay.forwarder
+PRODUCT_BUNDLE_IDENTIFIER = com.lazypay.forwarder
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.guspay. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.lazypay. All rights reserved.

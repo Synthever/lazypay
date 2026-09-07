@@ -7,7 +7,7 @@ import 'package:flutter_notification_listener/flutter_notification_listener.dart
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-const String kListenerPortName = "_guspay_listener_port_";
+const String kListenerPortName = "_lazypay_listener_port_";
 
 // Background isolate callback
 @pragma('vm:entry-point')
@@ -31,14 +31,14 @@ Future<void> _forwardNotificationToBackend(NotificationEvent evt) async {
     final text = evt.text ?? evt.message ?? '';
 
     // Ignore self and core OS system noise
-    if (pkg.contains('com.guspay.forwarder') || 
+    if (pkg.contains('com.lazypay.forwarder') || 
         pkg.contains('android.systemui') || 
         (title.isEmpty && text.isEmpty)) {
       return;
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final serverUrl = prefs.getString('server_url') ?? 'https://gus-pay.rkhyg.xyz';
+    final serverUrl = prefs.getString('server_url') ?? 'https://lazypay.rkhyg.xyz';
     final apiKey = prefs.getString('api_key') ?? '';
     final filterApp = (prefs.getString('filter_app') ?? 'id.dana').toLowerCase();
 
@@ -86,16 +86,16 @@ Future<void> _forwardNotificationToBackend(NotificationEvent evt) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const GusPayForwarderApp());
+  runApp(const LazyPayForwarderApp());
 }
 
-class GusPayForwarderApp extends StatelessWidget {
-  const GusPayForwarderApp({super.key});
+class LazyPayForwarderApp extends StatelessWidget {
+  const LazyPayForwarderApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'GusPay Forwarder',
+      title: 'LazyPay Forwarder',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF090D16),
@@ -135,7 +135,7 @@ class ForwarderHomePage extends StatefulWidget {
 }
 
 class _ForwarderHomePageState extends State<ForwarderHomePage> {
-  final _serverUrlController = TextEditingController(text: 'https://gus-pay.rkhyg.xyz');
+  final _serverUrlController = TextEditingController(text: 'https://lazypay.rkhyg.xyz');
   final _apiKeyController = TextEditingController();
   String _selectedFilter = 'id.dana';
   bool _isServiceRunning = false;
@@ -202,7 +202,7 @@ class _ForwarderHomePageState extends State<ForwarderHomePage> {
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _serverUrlController.text = prefs.getString('server_url') ?? 'https://gus-pay.rkhyg.xyz';
+      _serverUrlController.text = prefs.getString('server_url') ?? 'https://lazypay.rkhyg.xyz';
       _apiKeyController.text = prefs.getString('api_key') ?? '';
       _selectedFilter = prefs.getString('filter_app') ?? 'id.dana';
     });
@@ -252,7 +252,7 @@ class _ForwarderHomePageState extends State<ForwarderHomePage> {
       // Ensure initialized before start
       await NotificationsListener.initialize(callbackHandle: _notificationCallback);
       final started = await NotificationsListener.startService(
-        title: "GusPay Forwarder Aktif",
+        title: "LazyPay Forwarder Aktif",
         description: "Standby memantau notifikasi pembayaran DANA Bisnis...",
       );
       setState(() => _isServiceRunning = started ?? false);
@@ -339,7 +339,7 @@ class _ForwarderHomePageState extends State<ForwarderHomePage> {
           children: [
             Icon(Icons.qr_code_2, color: Color(0xFF10B981)),
             SizedBox(width: 8),
-            Text('GusPay Forwarder', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Text('LazyPay Forwarder', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
         backgroundColor: const Color(0xFF111827),

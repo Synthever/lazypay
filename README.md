@@ -1,6 +1,6 @@
-# GusPay — Autonomous DANA Bisnis QRIS Payment Gateway
+# LazyPay — Autonomous DANA Bisnis QRIS Payment Gateway
 
-GusPay adalah sistem payment gateway mandiri (self-hosted) untuk menerima pembayaran QRIS otomatis melalui akun **DANA Bisnis** tanpa agregator pihak ketiga (Midtrans/Xendit).
+LazyPay adalah sistem payment gateway mandiri (self-hosted) untuk menerima pembayaran QRIS otomatis melalui akun **DANA Bisnis** tanpa agregator pihak ketiga (Midtrans/Xendit).
 
 ## Fitur Utama
 - **Dynamic QRIS Generator (EMVCo):** Otomatis mengonversi QRIS Statis DANA menjadi Dynamic QRIS dengan nominal terkunci saat discan.

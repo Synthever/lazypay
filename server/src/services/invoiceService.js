@@ -148,7 +148,7 @@ export class InvoiceService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-GusPay-Secret': db.data.settings.secretApiKey
+          'X-LazyPay-Secret': db.data.settings.secretApiKey
         },
         body: JSON.stringify(payload)
       });

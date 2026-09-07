@@ -1,9 +1,9 @@
 services:
-  guspay:
+  lazypay:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: guspay
+    container_name: lazypay
     restart: unless-stopped
     ports:
       - "127.0.0.1:8940:8940"

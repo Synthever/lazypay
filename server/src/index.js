@@ -23,7 +23,7 @@ const rootDir = path.join(__dirname, '..');
 
 dotenv.config({ path: path.join(rootDir, '.env') });
 
-const JWT_SECRET = process.env.JWT_SECRET || 'guspay_jwt_secret_dev_key';
+const JWT_SECRET = process.env.JWT_SECRET || 'lazypay_jwt_secret_dev_key';
 const QRIS_STATIC_STRING = process.env.QRIS_STATIC_STRING || '';
 const MERCHANT_NAME = process.env.MERCHANT_NAME || 'Yumeko Store';
 
@@ -60,7 +60,7 @@ wss.on('connection', (ws) => {
 
 // Middleware: Admin JWT Authentication (Cookie or Header)
 function requireAdminAuth(req, res, next) {
-  const token = req.cookies?.guspay_token || req.headers.authorization?.replace('Bearer ', '');
+  const token = req.cookies?.lazypay_token || req.headers.authorization?.replace('Bearer ', '');
   if (!token) {
     if (req.xhr || req.headers.accept?.includes('json')) {
       return res.status(401).json({ success: false, message: 'Unauthorized: Session login dibutuhkan' });
@@ -115,7 +115,7 @@ app.post('/api/v1/auth/login', (req, res) => {
   }
 
   const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '7d' });
-  res.cookie('guspay_token', token, {
+  res.cookie('lazypay_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -127,7 +127,7 @@ app.post('/api/v1/auth/login', (req, res) => {
 
 // Logout API
 app.post('/api/v1/auth/logout', (req, res) => {
-  res.clearCookie('guspay_token');
+  res.clearCookie('lazypay_token');
   res.json({ success: true, message: 'Logout berhasil' });
 });
 
@@ -393,7 +393,7 @@ app.post('/api/v1/admin/settings', requireAdminAuth, (req, res) => {
 app.post('/api/v1/admin/keys/regenerate', requireAdminAuth, (req, res) => {
   const { type } = req.body;
   if (type === 'secret') {
-    db.data.settings.secretApiKey = 'guspay_sec_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    db.data.settings.secretApiKey = 'lazypay_sec_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
   } else if (type === 'forwarder') {
     db.data.settings.forwarderApiKey = 'fwd_' + Math.random().toString(36).substring(2, 15);
   }
@@ -464,5 +464,5 @@ app.get('*', (req, res) => res.redirect('/'));
 
 const PORT = process.env.PORT || 8940;
 server.listen(PORT, () => {
-  console.log(`[GusPay] Server running on http://127.0.0.1:${PORT}`);
+  console.log(`[LazyPay] Server running on http://127.0.0.1:${PORT}`);
 });
