@@ -128,6 +128,13 @@
         </ol>
       </div>
 
+      <!-- Back / Cancel Link for Pending -->
+      <div class="text-center pt-1">
+        <a id="btn-return-pending" href="https://lazyroute.rkhyg.xyz/user/dashboard" class="text-xs text-muted hover:text-coral transition-colors inline-flex items-center gap-1.5 font-medium">
+          <span>&larr; Batalkan &amp; Kembali ke Layanan</span>
+        </a>
+      </div>
+
     </div>
 
     <!-- PAID SUCCESS VIEW -->
@@ -146,8 +153,8 @@
         <div class="flex justify-between text-muted"><span>Waktu Verifikasi:</span><span id="paid-time" class="text-ink">-</span></div>
       </div>
       <div class="pt-2">
-        <a id="btn-return-app" href="https://9router.rkhyg.xyz/user/dashboard" class="w-full py-2.5 px-4 bg-coral hover:bg-coral-active text-white rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2 transition-colors">
-          <span>&larr; Kembali ke Dashboard</span>
+        <a id="btn-return-app" href="https://lazyroute.rkhyg.xyz/user/dashboard" class="w-full py-2.5 px-4 bg-coral hover:bg-coral-active text-white rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2 transition-colors">
+          <span>&larr; Kembali ke Layanan</span>
         </a>
       </div>
     </div>
@@ -159,6 +166,11 @@
       </div>
       <h2 class="font-display text-2xl font-normal text-ink">Tagihan Kadaluarsa</h2>
       <p class="text-xs text-muted">Batas waktu transfer untuk transaksi ini telah habis. Silakan buat pesanan baru.</p>
+      <div class="pt-2">
+        <a id="btn-return-expired" href="https://lazyroute.rkhyg.xyz/user/dashboard" class="w-full py-2.5 px-4 bg-surface-soft hover:bg-surface-card text-ink rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2 border border-hairline transition-colors">
+          <span>&larr; Kembali ke Layanan</span>
+        </a>
+      </div>
     </div>
 
     <!-- Footer -->
@@ -195,7 +207,89 @@
       }
     }
 
+    function resolveTargetReturnUrl(data) {
+      // 1. URL Query parameter override (?return_url=... or ?returnUrl=... or ?redirect_url=...)
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryReturn = urlParams.get('return_url') || urlParams.get('returnUrl') || urlParams.get('redirect_url');
+      if (queryReturn && (queryReturn.startsWith('http://') || queryReturn.startsWith('https://'))) {
+        return queryReturn;
+      }
+
+      // 2. Explicit returnUrl from invoice data
+      if (data && data.returnUrl && (data.returnUrl.startsWith('http://') || data.returnUrl.startsWith('https://'))) {
+        return data.returnUrl;
+      }
+
+      // 3. Callback URL origin heuristic
+      if (data && data.callbackUrl) {
+        try {
+          const u = new URL(data.callbackUrl);
+          if (u.hostname.includes('lazyroute') || u.hostname.includes('9router')) {
+            return 'https://lazyroute.rkhyg.xyz/user/dashboard';
+          }
+          return u.origin;
+        } catch (e) {}
+      }
+
+      // 4. Description heuristic (e.g. LazyRouter)
+      if (data && data.description && /lazyrouter/i.test(data.description)) {
+        return 'https://lazyroute.rkhyg.xyz/user/dashboard';
+      }
+
+      // 5. External Referrer
+      if (document.referrer) {
+        try {
+          const ref = new URL(document.referrer);
+          if (ref.hostname && ref.hostname !== window.location.hostname) {
+            return document.referrer;
+          }
+        } catch (e) {}
+      }
+
+      // 6. Default Fallback
+      return 'https://lazyroute.rkhyg.xyz/user/dashboard';
+    }
+
+    function formatReturnLabel(targetUrl) {
+      try {
+        const u = new URL(targetUrl);
+        if (u.hostname.includes('lazyroute') || u.hostname.includes('9router')) {
+          return 'Kembali ke LazyRouter';
+        }
+        if (u.hostname) {
+          const hostClean = u.hostname.replace(/^www\./, '');
+          return `Kembali ke ${hostClean}`;
+        }
+      } catch (e) {}
+      return 'Kembali ke Layanan';
+    }
+
+    function updateReturnButtons(data) {
+      const targetUrl = resolveTargetReturnUrl(data);
+      const serviceLabel = formatReturnLabel(targetUrl);
+
+      const btnPaid = document.getElementById('btn-return-app');
+      if (btnPaid) {
+        btnPaid.href = targetUrl;
+        btnPaid.innerHTML = `<span>&larr; ${serviceLabel}</span>`;
+      }
+
+      const btnExpired = document.getElementById('btn-return-expired');
+      if (btnExpired) {
+        btnExpired.href = targetUrl;
+        btnExpired.innerHTML = `<span>&larr; ${serviceLabel}</span>`;
+      }
+
+      const btnPending = document.getElementById('btn-return-pending');
+      if (btnPending) {
+        btnPending.href = targetUrl;
+        btnPending.innerHTML = `<span>&larr; Batalkan &amp; ${serviceLabel}</span>`;
+      }
+    }
+
     function renderInvoice(data) {
+      updateReturnButtons(data);
+
       document.getElementById('merchant-name').innerText = data.merchantName || 'Yumeko Store';
       document.getElementById('order-desc').innerText = `${data.description || 'Pembayaran'} • #${data.orderId}`;
       document.getElementById('total-amount').innerText = formatRupiah(data.totalAmount);
@@ -288,6 +382,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      updateReturnButtons(null);
       fetchInvoice();
       initWebSocket();
       lucide.createIcons();

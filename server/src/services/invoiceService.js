@@ -29,7 +29,7 @@ export class InvoiceService {
     return Math.floor(Math.random() * (maxUniqueCode - minUniqueCode + 1)) + minUniqueCode;
   }
 
-  static createInvoice({ orderId, amount, customerName, customerEmail, description, callbackUrl }) {
+  static createInvoice({ orderId, amount, customerName, customerEmail, description, callbackUrl, returnUrl }) {
     const baseAmount = parseInt(amount, 10);
     if (isNaN(baseAmount) || baseAmount <= 0) {
       throw new Error('Nominal tidak valid');
@@ -55,6 +55,7 @@ export class InvoiceService {
       status: 'PENDING', // PENDING, PAID, EXPIRED, CANCELLED
       callbackUrl: callbackUrl || db.data.settings.callbackUrl || '',
       callbackStatus: null, // PENDING, SUCCESS, FAILED
+      returnUrl: returnUrl || '',
       createdAt: now.toISOString(),
       expiredAt: expiredAt.toISOString(),
       paidAt: null,

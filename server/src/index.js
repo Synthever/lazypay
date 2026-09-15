@@ -199,10 +199,27 @@ app.get('/api/v1/invoices/:id', async (req, res) => {
       }
     }
 
+    // Dynamic resolution of returnUrl for current and legacy invoices
+    let resolvedReturnUrl = invoice.returnUrl || '';
+    if (!resolvedReturnUrl && invoice.callbackUrl) {
+      try {
+        const u = new URL(invoice.callbackUrl);
+        if (u.hostname.includes('lazyroute') || u.hostname.includes('9router')) {
+          resolvedReturnUrl = 'https://lazyroute.rkhyg.xyz/user/dashboard';
+        } else {
+          resolvedReturnUrl = u.origin;
+        }
+      } catch (e) {}
+    }
+    if (!resolvedReturnUrl && invoice.description && /lazyrouter/i.test(invoice.description)) {
+      resolvedReturnUrl = 'https://lazyroute.rkhyg.xyz/user/dashboard';
+    }
+
     res.json({
       success: true,
       data: {
         ...invoice,
+        returnUrl: resolvedReturnUrl || invoice.returnUrl || 'https://lazyroute.rkhyg.xyz/user/dashboard',
         merchantName: MERCHANT_NAME,
         qrString,
         qrImage,
@@ -220,13 +237,15 @@ app.get('/api/v1/invoices/:id', async (req, res) => {
 app.post('/api/v1/invoices', authenticateApiKey, (req, res) => {
   try {
     const { orderId, amount, customerName, customerEmail, description, callbackUrl } = req.body;
+    const returnUrl = req.body.returnUrl || req.body.return_url || req.body.redirectUrl || req.body.redirect_url || '';
     const invoice = InvoiceService.createInvoice({
       orderId,
       amount,
       customerName,
       customerEmail,
       description,
-      callbackUrl
+      callbackUrl,
+      returnUrl
     });
 
     broadcastEvent('invoice.created', invoice);
@@ -242,6 +261,7 @@ app.post('/api/v1/invoices', authenticateApiKey, (req, res) => {
         totalAmount: invoice.totalAmount,
         status: invoice.status,
         expiredAt: invoice.expiredAt,
+        returnUrl: invoice.returnUrl || undefined,
         checkoutUrl: `${req.protocol}://${req.get('host')}/pay/${invoice.id}`
       }
     });
